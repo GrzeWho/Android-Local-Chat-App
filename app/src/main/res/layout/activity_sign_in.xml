@@ -4,7 +4,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:gravity="center"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:background="@color/colorPrimaryDark">
 
     <TextView
         android:layout_width="wrap_content"
@@ -13,14 +14,34 @@
         android:textStyle="bold"
         android:layout_gravity="center_horizontal"
         android:layout_marginTop="40dp"
-        android:text="Welcome"/>
+        android:text="Welcome to Mova"/>
 
     <com.google.android.gms.common.SignInButton
         android:id="@+id/sign_in_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
-        android:visibility="visible"
-        android:layout_gravity="center"/>
+        android:layout_gravity="center"
+        android:visibility="visible" />
+
+    <TextView
+        android:id="@+id/textView3"
+        android:textAlignment="center"
+        android:layout_width="241dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="150dp"
+        android:text="Sign in with your Google account to continue"
+        android:textSize="20sp" />
+
+    <TextView
+        android:id="@+id/textView4"
+        android:textAlignment="center"
+        android:layout_width="241dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="650dp"
+        android:text="AND1-S19"
+        android:textSize="10sp" />
 
 </FrameLayout>

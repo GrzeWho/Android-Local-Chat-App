@@ -7,6 +7,7 @@ public class Message {
     private String message;
     private UUID userId;
     private Date timestamp;
+    private Coordinates coordinates;
     private double reach;
     private boolean proximityOnly;
 
@@ -50,4 +51,11 @@ public class Message {
         this.proximityOnly = proximityOnly;
     }
 
+    public Coordinates getCoordinates() {
+        return coordinates;
+    }
+
+    public void setCoordinates(Coordinates coordinates) {
+        this.coordinates = coordinates;
+    }
 }

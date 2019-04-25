@@ -9,11 +9,15 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -22,23 +26,27 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.kot.mova.adapters.MessagesAdapter;
 import com.kot.mova.model.Message;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.UUID;
 
-public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener {
+public class MainActivity extends AppCompatActivity implements MessagesAdapter.OnListItemClickListener, NavigationView.OnNavigationItemSelectedListener {
 
     private FirebaseAuth mFirebaseAuth;
     private FirebaseUser mFirebaseUser;
     private String mUsername;
     private String mPhotoUrl;
+    private RecyclerView mMessagesList;
+    private RecyclerView.Adapter mMessagesAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         FirebaseDatabase database = FirebaseDatabase.getInstance();
@@ -57,6 +65,7 @@ public class MainActivity extends AppCompatActivity
                 mPhotoUrl = mFirebaseUser.getPhotoUrl().toString();
             }
         }
+
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -93,6 +102,35 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
+        mMessagesList = findViewById(R.id.rv);
+        mMessagesList.hasFixedSize();
+        mMessagesList.setLayoutManager(new LinearLayoutManager(this));
+
+        ArrayList<Message> messages = new ArrayList<>();
+        Message test = new Message();
+        test.setMessage("lol");
+        messages.add(test);
+        Message test2 = new Message();
+        test2.setMessage("lol");
+        messages.add(test2);
+        Message test3 = new Message();
+        test3.setMessage("lol");
+        messages.add(test3);
+        Message test4 = new Message();
+        test4.setMessage("lol");
+        messages.add(test4);
+        messages.add(test4);
+        messages.add(test4);
+        messages.add(test4);
+        messages.add(test4);
+        messages.add(test4);
+        messages.add(test4);
+
+
+
+        mMessagesAdapter = new MessagesAdapter(messages, this);
+        mMessagesList.setAdapter(mMessagesAdapter);
+
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
@@ -117,7 +155,8 @@ public class MainActivity extends AppCompatActivity
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main, menu);
-
+        TextView nickText = findViewById(R.id.textView);
+        nickText.setText("Logged in as " + mUsername);
         return true;
     }
 
@@ -143,7 +182,10 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
 
         if (id == R.id.nav_manage) {
-
+            mFirebaseAuth.signOut();
+            Toast.makeText(this, "You have logged out.", Toast.LENGTH_SHORT).show();
+            startActivity(new Intent(this, SignInActivity.class));
+            finish();
         } else if (id == R.id.nav_share) {
 
         } else if (id == R.id.nav_send) {
@@ -153,5 +195,10 @@ public class MainActivity extends AppCompatActivity
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+    @Override
+    public void onListItemClick(int clickedItemIndex) {
+        int pokemonNumber = clickedItemIndex + 1;
+        Toast.makeText(this, "Pokemon Number: " + pokemonNumber, Toast.LENGTH_SHORT).show();
     }
 }

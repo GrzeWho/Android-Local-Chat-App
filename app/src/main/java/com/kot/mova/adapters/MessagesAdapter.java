@@ -8,16 +8,16 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.kot.mova.R;
-import com.kot.mova.model.Message;
+import com.kot.mova.model.ViewMessage;
 
 import java.util.ArrayList;
 
 public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.ViewHolder> {
 
-    private ArrayList<Message> mMessages;
+    private ArrayList<ViewMessage> mMessages;
     final private OnListItemClickListener mOnListItemClickListener;
 
-    public MessagesAdapter(ArrayList<Message> messages, OnListItemClickListener listener){
+    public MessagesAdapter(ArrayList<ViewMessage> messages, OnListItemClickListener listener){
         mMessages = messages;
         mOnListItemClickListener = listener;
     }
@@ -30,10 +30,10 @@ public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.ViewHo
     }
 
     public void onBindViewHolder(@NonNull ViewHolder viewHolder, int position) {
-        viewHolder.name.setText(mMessages.get(position).getUserId());
-        viewHolder.time.setText("Timestamp" + mMessages.get(position).getTimestamp());
-        viewHolder.distance.setText("100 km away");
         viewHolder.message.setText(mMessages.get(position).getMessage());
+        viewHolder.time.setText(mMessages.get(position).getTime());
+        viewHolder.distance.setText(mMessages.get(position).getDistance() + " km away");
+        viewHolder.name.setText(mMessages.get(position).getName());
     }
 
     public int getItemCount() {

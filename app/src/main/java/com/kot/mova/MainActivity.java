@@ -3,7 +3,6 @@ package com.kot.mova;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.location.Location;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
@@ -16,22 +15,25 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.Query;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.kot.mova.adapters.MessagesAdapter;
 import com.kot.mova.model.Coordinates;
 import com.kot.mova.model.Message;
+import com.kot.mova.model.ViewMessage;
+import com.kot.mova.utils.UtilMethods;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -42,6 +44,7 @@ public class MainActivity extends AppCompatActivity implements MessagesAdapter.O
     private FirebaseUser mFirebaseUser;
     private String mUsername;
     private String mPhotoUrl;
+    private ArrayList<ViewMessage> viewMessages;
     private ArrayList<Message> fetchedMessages;
     private RecyclerView mMessagesList;
     private RecyclerView.Adapter mMessagesAdapter;
@@ -50,6 +53,20 @@ public class MainActivity extends AppCompatActivity implements MessagesAdapter.O
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(MainActivity.this,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},
+                    64343);
+        }
+        mFusedLocationClient.getLastLocation()
+                .addOnSuccessListener(MainActivity.this, location -> {
+                    if (location != null && location.getLatitude()!=currentLocation.getX() && location.getLongitude()!=currentLocation.getY()) {
+                        currentLocation.setX(location.getLatitude());
+                        currentLocation.setY(location.getLongitude());
+                        redraw();
+                    }
+                });
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -59,8 +76,8 @@ public class MainActivity extends AppCompatActivity implements MessagesAdapter.O
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         mFirebaseAuth = FirebaseAuth.getInstance();
         mFirebaseUser = mFirebaseAuth.getCurrentUser();
-        fetchedMessages = new ArrayList<>();
-        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        viewMessages = new ArrayList<>();
+
 
         if (mFirebaseUser == null) {
             // Not signed in, launch the Sign In activity
@@ -76,31 +93,37 @@ public class MainActivity extends AppCompatActivity implements MessagesAdapter.O
         mMessagesList = findViewById(R.id.rv);
         mMessagesList.hasFixedSize();
         mMessagesList.setLayoutManager(new LinearLayoutManager(this));
+        Query mQuery = messages.limit(50);
 
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                    ActivityCompat.requestPermissions(MainActivity.this,
-                            new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},
-                            64343);
-                }
-                mFusedLocationClient.getLastLocation()
-                        .addOnSuccessListener(MainActivity.this, new OnSuccessListener<Location>() {
-                            @Override
-                            public void onSuccess(Location location) {
-                                if (location != null) {
-                                    currentLocation.setX(location.getLatitude());
-                                    currentLocation.setY(location.getLongitude());
-                                    Toast.makeText(MainActivity.this, "Located." + currentLocation.getX() + ", " + currentLocation.getY(), Toast.LENGTH_SHORT).show();
-                                }
-                            }
-                        });
-                Message messageToSend = new Message("tests", mFirebaseUser.getUid(), Calendar.getInstance().getTime().getTime(), new Coordinates(1, 2), 12, false);
-                messages.add(messageToSend);
-                Snackbar.make(view, "Message sent", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+        mQuery.orderBy("timestamp", Query.Direction.DESCENDING).addSnapshotListener((value, e) -> {
+            if (e != null) {
+                Log.w("o", "Listen failed.", e);
+                return;
             }
+            fetchedMessages = new ArrayList<Message>();
+            for (QueryDocumentSnapshot document : value) {
+                Message message = document.toObject(Message.class);
+                fetchedMessages.add(message);
+            }
+            if(currentLocation.getY()!=0 && currentLocation.getY()!=0) {
+                redraw();
+            }
+        });
+
+        fab.setOnClickListener(view -> {
+            mFusedLocationClient.getLastLocation()
+                    .addOnSuccessListener(MainActivity.this, location -> {
+                        if (location != null) {
+                            currentLocation.setX(location.getLatitude());
+                            currentLocation.setY(location.getLongitude());
+                            Toast.makeText(MainActivity.this, "Located." + currentLocation.getX() + ", " + currentLocation.getY(), Toast.LENGTH_SHORT).show();
+                        }
+                        Message messageToSend = new Message("Lorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsum", mFirebaseUser.getUid(), Calendar.getInstance().getTime().getTime(), currentLocation, 12, false);
+                        messages.add(messageToSend);
+                        Snackbar.make(view, "Message sent", Snackbar.LENGTH_LONG)
+                                .setAction("Action", null).show();
+                    });
+
         });
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -112,7 +135,17 @@ public class MainActivity extends AppCompatActivity implements MessagesAdapter.O
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
     }
+    private void redraw() {
+        if (fetchedMessages!=null) {
+            viewMessages = new ArrayList<>();
+            for (Message message : fetchedMessages) {
+                viewMessages.add(UtilMethods.getViewMessage(message, currentLocation));
+            }
+            mMessagesAdapter = new MessagesAdapter(viewMessages, MainActivity.this);
+            mMessagesList.setAdapter(mMessagesAdapter);
+        }
 
+    }
     @Override
     public void onBackPressed() {
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);

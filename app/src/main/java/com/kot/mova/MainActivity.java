@@ -1,6 +1,7 @@
 package com.kot.mova;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
@@ -43,30 +44,35 @@ public class MainActivity extends AppCompatActivity implements MessagesAdapter.O
     private FirebaseAuth mFirebaseAuth;
     private FirebaseUser mFirebaseUser;
     private String mUsername;
-    private String mPhotoUrl;
     private ArrayList<ViewMessage> viewMessages;
     private ArrayList<Message> fetchedMessages;
     private RecyclerView mMessagesList;
     private RecyclerView.Adapter mMessagesAdapter;
     private FusedLocationProviderClient mFusedLocationClient;
     private Coordinates currentLocation = new Coordinates();
+    private boolean locationPermissionsNotGranted;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            locationPermissionsNotGranted = true;
             ActivityCompat.requestPermissions(MainActivity.this,
                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},
                     64343);
+        } else {
+            mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+
+            mFusedLocationClient.getLastLocation()
+                    .addOnSuccessListener(MainActivity.this, location -> {
+                        if (location != null) {
+                            currentLocation.setX(location.getLatitude());
+                            currentLocation.setY(location.getLongitude());
+                            Toast.makeText(MainActivity.this, "Located." + currentLocation.getX() + ", " + currentLocation.getY(), Toast.LENGTH_SHORT).show();
+                            redraw();
+                        }
+                    });
         }
-        mFusedLocationClient.getLastLocation()
-                .addOnSuccessListener(MainActivity.this, location -> {
-                    if (location != null && location.getLatitude()!=currentLocation.getX() && location.getLongitude()!=currentLocation.getY()) {
-                        currentLocation.setX(location.getLatitude());
-                        currentLocation.setY(location.getLongitude());
-                        redraw();
-                    }
-                });
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -76,8 +82,6 @@ public class MainActivity extends AppCompatActivity implements MessagesAdapter.O
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         mFirebaseAuth = FirebaseAuth.getInstance();
         mFirebaseUser = mFirebaseAuth.getCurrentUser();
-        viewMessages = new ArrayList<>();
-
 
         if (mFirebaseUser == null) {
             // Not signed in, launch the Sign In activity
@@ -86,9 +90,6 @@ public class MainActivity extends AppCompatActivity implements MessagesAdapter.O
             return;
         } else {
             mUsername = mFirebaseUser.getDisplayName();
-            if (mFirebaseUser.getPhotoUrl() != null) {
-                mPhotoUrl = mFirebaseUser.getPhotoUrl().toString();
-            }
         }
         mMessagesList = findViewById(R.id.rv);
         mMessagesList.hasFixedSize();
@@ -105,9 +106,7 @@ public class MainActivity extends AppCompatActivity implements MessagesAdapter.O
                 Message message = document.toObject(Message.class);
                 fetchedMessages.add(message);
             }
-            if(currentLocation.getY()!=0 && currentLocation.getY()!=0) {
-                redraw();
-            }
+            redraw();
         });
 
         fab.setOnClickListener(view -> {
@@ -116,7 +115,6 @@ public class MainActivity extends AppCompatActivity implements MessagesAdapter.O
                         if (location != null) {
                             currentLocation.setX(location.getLatitude());
                             currentLocation.setY(location.getLongitude());
-                            Toast.makeText(MainActivity.this, "Located." + currentLocation.getX() + ", " + currentLocation.getY(), Toast.LENGTH_SHORT).show();
                         }
                         Message messageToSend = new Message("Lorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsum", mFirebaseUser.getUid(), Calendar.getInstance().getTime().getTime(), currentLocation, 12, false);
                         messages.add(messageToSend);
@@ -139,13 +137,19 @@ public class MainActivity extends AppCompatActivity implements MessagesAdapter.O
         if (fetchedMessages!=null) {
             viewMessages = new ArrayList<>();
             for (Message message : fetchedMessages) {
-                viewMessages.add(UtilMethods.getViewMessage(message, currentLocation));
+                ViewMessage viewMessage = UtilMethods.getViewMessage(message, currentLocation);
+                if(locationPermissionsNotGranted) {
+                    viewMessage.setDistance("No location permissions");
+                }
+                viewMessages.add(viewMessage);
+
             }
             mMessagesAdapter = new MessagesAdapter(viewMessages, MainActivity.this);
             mMessagesList.setAdapter(mMessagesAdapter);
         }
 
     }
+
     @Override
     public void onBackPressed() {
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -206,5 +210,34 @@ public class MainActivity extends AppCompatActivity implements MessagesAdapter.O
     public void onListItemClick(int clickedItemIndex) {
         int pokemonNumber = clickedItemIndex + 1;
         Toast.makeText(this, "Pokemon Number: " + pokemonNumber, Toast.LENGTH_SHORT).show();
+    }
+
+    @SuppressLint("MissingPermission")
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           String[] permissions, int[] grantResults) {
+        switch (requestCode) {
+            case 64343: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+                    locationPermissionsNotGranted = false;
+                    mFusedLocationClient.getLastLocation()
+                            .addOnSuccessListener(MainActivity.this, location -> {
+                                if (location != null) {
+                                    currentLocation.setX(location.getLatitude());
+                                    currentLocation.setY(location.getLongitude());
+                                    Toast.makeText(MainActivity.this, "Located." + currentLocation.getX() + ", " + currentLocation.getY(), Toast.LENGTH_SHORT).show();
+                                    redraw();
+                                }
+                            });
+                } else {
+                    locationPermissionsNotGranted = true;
+                    Toast.makeText(this, "You have denied the location permissions for the app. In an app that send messages to people nearby. Smart.", Toast.LENGTH_LONG).show();
+                }
+                return;
+            }
+        }
     }
 }

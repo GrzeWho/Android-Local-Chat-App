@@ -12,7 +12,7 @@ public class UtilMethods {
         ViewMessage viewMessage = new ViewMessage();
         viewMessage.setTime(DateUtils.getRelativeTimeSpanString(message.getTimestamp()).toString());
         viewMessage.setCoordinates(message.getCoordinates());
-        viewMessage.setDistance(distance(currentLocation.getX(), message.getCoordinates().getX(), currentLocation.getY(), message.getCoordinates().getY()));
+        viewMessage.setDistance(getDistanceString(distance(currentLocation.getX(), message.getCoordinates().getX(), currentLocation.getY(), message.getCoordinates().getY())));
         viewMessage.setId(message.getMessageId());
         viewMessage.setName("Grzegorz");
         viewMessage.setMessage(message.getMessage());
@@ -31,6 +31,17 @@ public class UtilMethods {
                 * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
         double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
-        return R * c * 1000;
+        return R * c;
+    }
+
+    public static String getDistanceString(double distance) {
+        if (distance > 1) {
+            String.format("%.2f", distance);
+            return String.format("%.2f", distance) + "km away";
+        } else if (distance < 0.002) {
+            return "within arm's reach";
+        } else {
+            return (int)(distance*1000) + "m away";
+        }
     }
 }

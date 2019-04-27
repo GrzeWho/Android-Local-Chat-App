@@ -4,7 +4,7 @@ public class ViewMessage {
 
     String time;
     Coordinates coordinates;
-    double distance;
+    String distance;
     String message;
     String name;
     String id;
@@ -25,11 +25,11 @@ public class ViewMessage {
         this.coordinates = coordinates;
     }
 
-    public double getDistance() {
+    public String getDistance() {
         return distance;
     }
 
-    public void setDistance(double distance) {
+    public void setDistance(String distance) {
         this.distance = distance;
     }
 

@@ -32,7 +32,7 @@ public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.ViewHo
     public void onBindViewHolder(@NonNull ViewHolder viewHolder, int position) {
         viewHolder.message.setText(mMessages.get(position).getMessage());
         viewHolder.time.setText(mMessages.get(position).getTime());
-        viewHolder.distance.setText(mMessages.get(position).getDistance() + " km away");
+        viewHolder.distance.setText(mMessages.get(position).getDistance());
         viewHolder.name.setText(mMessages.get(position).getName());
     }
 

@@ -30,7 +30,10 @@ public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.ViewHo
     }
 
     public void onBindViewHolder(@NonNull ViewHolder viewHolder, int position) {
-        viewHolder.name.setText(mMessages.get(position).getMessage());
+        viewHolder.name.setText(mMessages.get(position).getUserId());
+        viewHolder.time.setText("Timestamp" + mMessages.get(position).getTimestamp());
+        viewHolder.distance.setText("100 km away");
+        viewHolder.message.setText(mMessages.get(position).getMessage());
     }
 
     public int getItemCount() {
@@ -40,10 +43,16 @@ public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.ViewHo
     class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
         TextView name;
+        TextView time;
+        TextView distance;
+        TextView message;
 
         ViewHolder(View itemView) {
             super(itemView);
-            name = itemView.findViewById(R.id.tv_name);
+            name = itemView.findViewById(R.id.userNameTextView);
+            time = itemView.findViewById(R.id.timeTextView);
+            distance = itemView.findViewById(R.id.distanceTextView);
+            message = itemView.findViewById(R.id.messageTextView);
             itemView.setOnClickListener(this);
         }
 

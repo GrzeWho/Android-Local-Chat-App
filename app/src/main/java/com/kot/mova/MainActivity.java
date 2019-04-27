@@ -1,10 +1,14 @@
 package com.kot.mova;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.location.Location;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -12,26 +16,25 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.FirebaseFirestore;
 import com.kot.mova.adapters.MessagesAdapter;
+import com.kot.mova.model.Coordinates;
 import com.kot.mova.model.Message;
 
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity implements MessagesAdapter.OnListItemClickListener, NavigationView.OnNavigationItemSelectedListener {
 
@@ -39,21 +42,26 @@ public class MainActivity extends AppCompatActivity implements MessagesAdapter.O
     private FirebaseUser mFirebaseUser;
     private String mUsername;
     private String mPhotoUrl;
+    private ArrayList<Message> fetchedMessages;
     private RecyclerView mMessagesList;
     private RecyclerView.Adapter mMessagesAdapter;
+    private FusedLocationProviderClient mFusedLocationClient;
+    private Coordinates currentLocation = new Coordinates();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        FirebaseDatabase database = FirebaseDatabase.getInstance();
-        final DatabaseReference myRef = database.getReference("messages");
+        FirebaseFirestore firebaseFirestore = FirebaseFirestore.getInstance();
+        final CollectionReference messages = firebaseFirestore.collection("messages");
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         mFirebaseAuth = FirebaseAuth.getInstance();
         mFirebaseUser = mFirebaseAuth.getCurrentUser();
+        fetchedMessages = new ArrayList<>();
+        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+
         if (mFirebaseUser == null) {
             // Not signed in, launch the Sign In activity
             startActivity(new Intent(this, SignInActivity.class));
@@ -65,71 +73,35 @@ public class MainActivity extends AppCompatActivity implements MessagesAdapter.O
                 mPhotoUrl = mFirebaseUser.getPhotoUrl().toString();
             }
         }
-
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Message messageToSend = new Message();
-                messageToSend.setMessage("Testing");
-                messageToSend.setProximityOnly(false);
-                messageToSend.setReach(100);
-                messageToSend.setTimestamp(Calendar.getInstance().getTime());
-                messageToSend.setUserId(UUID.randomUUID());
-                myRef.push().setValue(messageToSend);
-                Snackbar.make(view, "Message sent", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
-
-
-        myRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                // This method is called once with the initial value and again
-                // whenever data at this location is updated.
-                if(dataSnapshot!=null) {
-                    Message value = dataSnapshot.getValue(Message.class);
-                    if(value!=null) {
-                        Log.i("test", "Value is: " + value.getMessage());
-                    }
-                }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError error) {
-                // Failed to read value
-                Log.w("test", "Failed to read value.", error.toException());
-            }
-        });
-
         mMessagesList = findViewById(R.id.rv);
         mMessagesList.hasFixedSize();
         mMessagesList.setLayoutManager(new LinearLayoutManager(this));
 
-        ArrayList<Message> messages = new ArrayList<>();
-        Message test = new Message();
-        test.setMessage("lol");
-        messages.add(test);
-        Message test2 = new Message();
-        test2.setMessage("lol");
-        messages.add(test2);
-        Message test3 = new Message();
-        test3.setMessage("lol");
-        messages.add(test3);
-        Message test4 = new Message();
-        test4.setMessage("lol");
-        messages.add(test4);
-        messages.add(test4);
-        messages.add(test4);
-        messages.add(test4);
-        messages.add(test4);
-        messages.add(test4);
-        messages.add(test4);
-
-
-
-        mMessagesAdapter = new MessagesAdapter(messages, this);
-        mMessagesList.setAdapter(mMessagesAdapter);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                    ActivityCompat.requestPermissions(MainActivity.this,
+                            new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},
+                            64343);
+                }
+                mFusedLocationClient.getLastLocation()
+                        .addOnSuccessListener(MainActivity.this, new OnSuccessListener<Location>() {
+                            @Override
+                            public void onSuccess(Location location) {
+                                if (location != null) {
+                                    currentLocation.setX(location.getLatitude());
+                                    currentLocation.setY(location.getLongitude());
+                                    Toast.makeText(MainActivity.this, "Located." + currentLocation.getX() + ", " + currentLocation.getY(), Toast.LENGTH_SHORT).show();
+                                }
+                            }
+                        });
+                Message messageToSend = new Message("tests", mFirebaseUser.getUid(), Calendar.getInstance().getTime().getTime(), new Coordinates(1, 2), 12, false);
+                messages.add(messageToSend);
+                Snackbar.make(view, "Message sent", Snackbar.LENGTH_LONG)
+                        .setAction("Action", null).show();
+            }
+        });
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -196,6 +168,7 @@ public class MainActivity extends AppCompatActivity implements MessagesAdapter.O
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }
+
     @Override
     public void onListItemClick(int clickedItemIndex) {
         int pokemonNumber = clickedItemIndex + 1;

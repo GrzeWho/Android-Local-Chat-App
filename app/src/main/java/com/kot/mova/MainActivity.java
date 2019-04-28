@@ -78,8 +78,7 @@ public class MainActivity extends AppCompatActivity implements MessagesAdapter.O
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        FirebaseFirestore firebaseFirestore = FirebaseFirestore.getInstance();
-        final CollectionReference messages = firebaseFirestore.collection("messages");
+
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         mFirebaseAuth = FirebaseAuth.getInstance();
         mFirebaseUser = mFirebaseAuth.getCurrentUser();
@@ -92,30 +91,7 @@ public class MainActivity extends AppCompatActivity implements MessagesAdapter.O
         } else {
             mUsername = mFirebaseUser.getDisplayName();
         }
-        prefs = getSharedPreferences("Mova", MODE_PRIVATE);
-        int maxMessages = prefs.getInt("messages", 500);
-        int maxDistance = prefs.getInt("distance", 10);
-
-        mMessagesList = findViewById(R.id.rv);
-        mMessagesList.hasFixedSize();
-        mMessagesList.setLayoutManager(new LinearLayoutManager(this));
-        Query mQuery = messages.limit(maxMessages);
-
-        mQuery.orderBy("timestamp", Query.Direction.DESCENDING).addSnapshotListener((value, e) -> {
-            if (e != null) {
-                Log.w("o", "Listen failed.", e);
-                return;
-            }
-            fetchedMessages = new ArrayList<Message>();
-            for (QueryDocumentSnapshot document : value) {
-                Message message = document.toObject(Message.class);
-                double messageDistance = UtilMethods.distance(message.getCoordinates().getX(), currentLocation.getX(), message.getCoordinates().getY(), currentLocation.getX());
-                if(messageDistance<maxDistance) {
-                    fetchedMessages.add(message);
-                }
-            }
-            redraw();
-        });
+        fetchData();
 
         fab.setOnClickListener(view -> {
             Intent intent = new Intent(this, MessageActivity.class);
@@ -150,6 +126,41 @@ public class MainActivity extends AppCompatActivity implements MessagesAdapter.O
 
     }
 
+    private void fetchData() {
+        FirebaseFirestore firebaseFirestore = FirebaseFirestore.getInstance();
+        final CollectionReference messages = firebaseFirestore.collection("messages");
+        prefs = getSharedPreferences("Mova", MODE_PRIVATE);
+        int maxMessages = prefs.getInt("messages", 500);
+        double maxDistance = (double) prefs.getFloat("distance", 10);
+
+        mMessagesList = findViewById(R.id.rv);
+        mMessagesList.hasFixedSize();
+        mMessagesList.setLayoutManager(new LinearLayoutManager(this));
+        Query mQuery = messages.limit(maxMessages);
+
+        mQuery.orderBy("timestamp", Query.Direction.DESCENDING).addSnapshotListener((value, e) -> {
+            if (e != null) {
+                Log.w("o", "Listen failed.", e);
+                return;
+            }
+            fetchedMessages = new ArrayList<Message>();
+            for (QueryDocumentSnapshot document : value) {
+                Message message = document.toObject(Message.class);
+                double messageDistance = UtilMethods.distance(message.getCoordinates().getX(), currentLocation.getX(), message.getCoordinates().getY(), currentLocation.getY());
+                Log.e("testing", messageDistance + "<" + maxDistance);
+                if(messageDistance < maxDistance) {
+                    fetchedMessages.add(message);
+                }
+            }
+            redraw();
+        });
+    }
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+        fetchData();
+        redraw();
+    }
     @Override
     public void onBackPressed() {
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -242,4 +253,5 @@ public class MainActivity extends AppCompatActivity implements MessagesAdapter.O
             }
         }
     }
+
 }

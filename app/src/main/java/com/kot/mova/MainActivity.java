@@ -4,6 +4,7 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
@@ -36,6 +37,7 @@ import com.kot.mova.model.ViewMessage;
 import com.kot.mova.utils.UtilMethods;
 
 import java.util.ArrayList;
+import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity implements MessagesAdapter.OnListItemClickListener, NavigationView.OnNavigationItemSelectedListener {
 
@@ -200,8 +202,10 @@ public class MainActivity extends AppCompatActivity implements MessagesAdapter.O
 
     @Override
     public void onListItemClick(int clickedItemIndex) {
-        int pokemonNumber = clickedItemIndex + 1;
-        Toast.makeText(this, "Pokemon Number: " + pokemonNumber, Toast.LENGTH_SHORT).show();
+        Coordinates coordinates = viewMessages.get(clickedItemIndex).getCoordinates();
+        String uri = String.format(Locale.ENGLISH, "https://www.google.com/maps/search/?api=1&query=%s,%s", coordinates.getX(), coordinates.getY());
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
+        startActivity(intent);
     }
 
     @SuppressLint("MissingPermission")

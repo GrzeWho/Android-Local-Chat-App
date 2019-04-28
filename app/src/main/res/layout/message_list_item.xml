@@ -17,6 +17,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
             android:text="GrzeWho"
+            android:textColor="@color/colorGrey"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
 
@@ -25,6 +26,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="8dp"
+            android:textColor="@color/colorGrey"
             android:text="2 minutes ago"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
@@ -37,6 +39,7 @@
             android:layout_marginEnd="8dp"
             android:layout_marginBottom="8dp"
             android:text="This is an example of a messageThis is an example of a messageThis is an example of a messageThis is an example of a message"
+            android:textColor="@color/colorBlack"
             app:layout_constraintBottom_toTopOf="@+id/userNameTextView"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -48,6 +51,7 @@
             android:layout_height="wrap_content"
             android:layout_marginEnd="8dp"
             android:text="10 km away"
+            android:textColor="@color/colorGrey"
             app:layout_constraintBottom_toTopOf="@+id/timeTextView"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/messageTextView" />

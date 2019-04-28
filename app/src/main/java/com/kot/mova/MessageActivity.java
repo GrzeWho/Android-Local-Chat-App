@@ -88,7 +88,6 @@ public class MessageActivity extends AppCompatActivity {
 
     private String makeHttpRequest(URL url) throws IOException {
         String jsonResponse = "";
-        Log.e("testing", "making a request");
         if (url == null)
             return jsonResponse;
 
@@ -105,8 +104,6 @@ public class MessageActivity extends AppCompatActivity {
             if (urlConnection.getResponseCode() == 200) {
                 is = urlConnection.getInputStream();
                 jsonResponse = readFromStream(is);
-            } else {
-                Log.e("lol", urlConnection.getResponseMessage());
             }
 
         } catch (IOException e) {
@@ -122,8 +119,6 @@ public class MessageActivity extends AppCompatActivity {
 
     private String readFromStream(InputStream is) throws IOException {
         StringBuilder output = new StringBuilder();
-        Log.e("testing", "readfromstream");
-
         if (is != null) {
             InputStreamReader inputStreamReader = new InputStreamReader(is, Charset.forName("UTF-8"));
             BufferedReader reader = new BufferedReader(inputStreamReader);
@@ -133,8 +128,6 @@ public class MessageActivity extends AppCompatActivity {
                 line = reader.readLine();
             }
         }
-        Log.e("testing", output.toString());
-
         return output.toString();
     }
     public class IpAsync extends AsyncTask<String, Void, String> {
@@ -144,7 +137,6 @@ public class MessageActivity extends AppCompatActivity {
             String jsonResponse = "";
             try {
                 Document doc = Jsoup.connect(strings[0]).get();
-                Log.e("a", doc.getElementById("ip").text());
                 return doc.getElementById("ip").text();
             } catch (IOException e) {
                 Log.e("suppressing", "This exception means either the ip service is down or the user has no internet access.");
@@ -171,8 +163,6 @@ public class MessageActivity extends AppCompatActivity {
             try {
                 url = new URL(strings[0]);
                 jsonResponse = makeHttpRequest(url);
-                Log.e("b", jsonResponse);
-
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -182,7 +172,6 @@ public class MessageActivity extends AppCompatActivity {
         @SuppressLint("MissingPermission")
         @Override
         protected void onPostExecute(String s) {
-            Log.e("testing", s);
             JSONObject root = null;
             try {
                 root = new JSONObject(s);

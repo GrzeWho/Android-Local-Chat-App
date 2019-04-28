@@ -70,7 +70,7 @@ public class MainActivity extends AppCompatActivity implements MessagesAdapter.O
                         if (location != null) {
                             currentLocation.setX(location.getLatitude());
                             currentLocation.setY(location.getLongitude());
-                            redraw();
+                            fetchData();
                         }
                     });
         }
@@ -112,7 +112,6 @@ public class MainActivity extends AppCompatActivity implements MessagesAdapter.O
         if (fetchedMessages!=null) {
             viewMessages = new ArrayList<>();
             for (Message message : fetchedMessages) {
-                Log.e("lk", message.getMessage() + " " + message.getCoordinates() + " ");
                 ViewMessage viewMessage = UtilMethods.getViewMessage(message, currentLocation);
                 if(locationPermissionsNotGranted) {
                     viewMessage.setDistance("No location permissions");
@@ -123,7 +122,6 @@ public class MainActivity extends AppCompatActivity implements MessagesAdapter.O
             mMessagesAdapter = new MessagesAdapter(viewMessages, MainActivity.this);
             mMessagesList.setAdapter(mMessagesAdapter);
         }
-
     }
 
     private void fetchData() {
@@ -147,8 +145,7 @@ public class MainActivity extends AppCompatActivity implements MessagesAdapter.O
             for (QueryDocumentSnapshot document : value) {
                 Message message = document.toObject(Message.class);
                 double messageDistance = UtilMethods.distance(message.getCoordinates().getX(), currentLocation.getX(), message.getCoordinates().getY(), currentLocation.getY());
-                Log.e("testing", messageDistance + "<" + maxDistance);
-                if(messageDistance < maxDistance) {
+                if(messageDistance < maxDistance && messageDistance < message.getReach()) {
                     fetchedMessages.add(message);
                 }
             }
@@ -159,7 +156,6 @@ public class MainActivity extends AppCompatActivity implements MessagesAdapter.O
     protected void onRestart() {
         super.onRestart();
         fetchData();
-        redraw();
     }
     @Override
     public void onBackPressed() {
@@ -241,8 +237,7 @@ public class MainActivity extends AppCompatActivity implements MessagesAdapter.O
                                 if (location != null) {
                                     currentLocation.setX(location.getLatitude());
                                     currentLocation.setY(location.getLongitude());
-                                    Toast.makeText(MainActivity.this, "Located." + currentLocation.getX() + ", " + currentLocation.getY(), Toast.LENGTH_SHORT).show();
-                                    redraw();
+                                    fetchData();
                                 }
                             });
                 } else {

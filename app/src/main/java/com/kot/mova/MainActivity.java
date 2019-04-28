@@ -202,10 +202,6 @@ public class MainActivity extends AppCompatActivity implements MessagesAdapter.O
             Toast.makeText(this, "You have logged out.", Toast.LENGTH_SHORT).show();
             startActivity(new Intent(this, SignInActivity.class));
             finish();
-        } else if (id == R.id.nav_share) {
-
-        } else if (id == R.id.nav_send) {
-
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);

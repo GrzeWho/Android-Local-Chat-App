@@ -9,7 +9,9 @@ import android.widget.TextView;
 public class SettingsActivity extends AppCompatActivity {
     SeekBar kmSeekBar;
     SeekBar messagesSeekBar;
-
+    double kilometers;
+    int messageNumber;
+    SharedPreferences prefs;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -17,10 +19,8 @@ public class SettingsActivity extends AppCompatActivity {
         TextView kmView = findViewById(R.id.distanceTextView);
         TextView messageNumberView = findViewById(R.id.numberOfMessagesTextView);
         kmSeekBar = findViewById(R.id.seekBarkm);
-        SharedPreferences prefs = getSharedPreferences("Mova", MODE_PRIVATE);
-        SharedPreferences.Editor editor = prefs.edit();
-        editor.putString("test", "value");
-        int messages = prefs.getInt("messages", 50);
+        prefs = getSharedPreferences("Mova", MODE_PRIVATE);
+        int messages = prefs.getInt("messages", 500);
         messageNumberView.setText(messages+"");
         double distance = (double) prefs.getFloat("distance", 10);
         kmView.setText(distance + " km");
@@ -36,7 +36,8 @@ public class SettingsActivity extends AppCompatActivity {
 
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                kmView.setText((double)(progress*5)/10 + " km");
+                kilometers = (double)(progress*5)/10;
+                kmView.setText(kilometers + " km");
             }
         });
 
@@ -52,8 +53,18 @@ public class SettingsActivity extends AppCompatActivity {
 
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                messageNumberView.setText("" + progress);
+                messageNumberView.setText("" + progress*10);
+                messageNumber = progress*10;
             }
         });
+
+    }
+    @Override
+    protected void onStop() {
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putInt("messages", messageNumber);
+        editor.putFloat("distance", (float) kilometers);
+        editor.apply();
+        super.onStop();
     }
 }

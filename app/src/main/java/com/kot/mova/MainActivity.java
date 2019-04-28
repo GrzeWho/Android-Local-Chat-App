@@ -3,6 +3,7 @@ package com.kot.mova;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
@@ -51,6 +52,7 @@ public class MainActivity extends AppCompatActivity implements MessagesAdapter.O
     private FusedLocationProviderClient mFusedLocationClient;
     private Coordinates currentLocation = new Coordinates();
     private boolean locationPermissionsNotGranted;
+    SharedPreferences prefs;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,7 +70,6 @@ public class MainActivity extends AppCompatActivity implements MessagesAdapter.O
                         if (location != null) {
                             currentLocation.setX(location.getLatitude());
                             currentLocation.setY(location.getLongitude());
-                            Toast.makeText(MainActivity.this, "Located." + currentLocation.getX() + ", " + currentLocation.getY(), Toast.LENGTH_SHORT).show();
                             redraw();
                         }
                     });
@@ -91,12 +92,14 @@ public class MainActivity extends AppCompatActivity implements MessagesAdapter.O
         } else {
             mUsername = mFirebaseUser.getDisplayName();
         }
-
+        prefs = getSharedPreferences("Mova", MODE_PRIVATE);
+        int maxMessages = prefs.getInt("messages", 500);
+        int maxDistance = prefs.getInt("distance", 10);
 
         mMessagesList = findViewById(R.id.rv);
         mMessagesList.hasFixedSize();
         mMessagesList.setLayoutManager(new LinearLayoutManager(this));
-        Query mQuery = messages.limit(50);
+        Query mQuery = messages.limit(maxMessages);
 
         mQuery.orderBy("timestamp", Query.Direction.DESCENDING).addSnapshotListener((value, e) -> {
             if (e != null) {
@@ -106,7 +109,10 @@ public class MainActivity extends AppCompatActivity implements MessagesAdapter.O
             fetchedMessages = new ArrayList<Message>();
             for (QueryDocumentSnapshot document : value) {
                 Message message = document.toObject(Message.class);
-                fetchedMessages.add(message);
+                double messageDistance = UtilMethods.distance(message.getCoordinates().getX(), currentLocation.getX(), message.getCoordinates().getY(), currentLocation.getX());
+                if(messageDistance<maxDistance) {
+                    fetchedMessages.add(message);
+                }
             }
             redraw();
         });

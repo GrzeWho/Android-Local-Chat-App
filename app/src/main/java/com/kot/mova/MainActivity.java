@@ -7,7 +7,6 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -37,7 +36,6 @@ import com.kot.mova.model.ViewMessage;
 import com.kot.mova.utils.UtilMethods;
 
 import java.util.ArrayList;
-import java.util.Calendar;
 
 public class MainActivity extends AppCompatActivity implements MessagesAdapter.OnListItemClickListener, NavigationView.OnNavigationItemSelectedListener {
 
@@ -112,18 +110,9 @@ public class MainActivity extends AppCompatActivity implements MessagesAdapter.O
         });
 
         fab.setOnClickListener(view -> {
-            mFusedLocationClient.getLastLocation()
-                    .addOnSuccessListener(MainActivity.this, location -> {
-                        if (location != null) {
-                            currentLocation.setX(location.getLatitude());
-                            currentLocation.setY(location.getLongitude());
-                        }
-                        Message messageToSend = new Message("Lorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsum", mFirebaseUser.getUid(), Calendar.getInstance().getTime().getTime(), currentLocation, 12, false);
-                        messages.add(messageToSend);
-                        Snackbar.make(view, "Message sent", Snackbar.LENGTH_LONG)
-                                .setAction("Action", null).show();
-                    });
-
+            Intent intent = new Intent(this, MessageActivity.class);
+            intent.putExtra("username", mFirebaseUser.getDisplayName());
+            startActivity(intent);
         });
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -139,6 +128,7 @@ public class MainActivity extends AppCompatActivity implements MessagesAdapter.O
         if (fetchedMessages!=null) {
             viewMessages = new ArrayList<>();
             for (Message message : fetchedMessages) {
+                Log.e("lk", message.getMessage() + " " + message.getCoordinates() + " ");
                 ViewMessage viewMessage = UtilMethods.getViewMessage(message, currentLocation);
                 if(locationPermissionsNotGranted) {
                     viewMessage.setDistance("No location permissions");
